@@ -1,0 +1,102 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script src="~/layui/layui.js"></script>
+</head>
+<body>
+    <div> 
+        <table>
+            <thead>
+                <tr>
+                    <td>编号</td>
+                    <td>姓名</td>
+                    <td>年级</td>
+                </tr>
+            </thead>
+            <tbody id="tbl">
+                
+            </tbody>
+        </table>
+        <div id="pagelist"></div>
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+
+    var pageindex = 1;
+    var pagesize = 5;
+    var row = 0;
+    $(function () {
+        
+        GetRows();
+        QueryAll(pageindex, pagesize);
+    });
+   
+    function QueryAll(index, size) {
+    
+        $.ajax({
+            url: "/Home/QueryAll",
+            data: "{pageindex:" + index + ",pagesize:" + size + "}",
+            type: "post",
+            dataType: "json",
+            contentType: "application/json",
+            success: function (result) {
+                $("#tbl").empty();
+                $.each(result, function (index, data) {
+                    $("#tbl").append("<tr><td>" + data.sid + "</td><td>" + data.name + "</td><td>" + data.age +"</td></tr>")
+                });  
+            }, error: function (ex) {
+                alert("Error:" + ex.responseText);
+            }
+        });
+
+    }
+
+
+    function GetRows() {
+        $.ajax({
+            type: "POST",
+            url: "/Home/GetCount",
+            data: "{}",
+            dataType: "json",
+            contentType: "application/json",
+            success: function (result) {
+                //获取总条数
+                rows = result;
+                layui.use(['laypage', 'layer'], function () {
+                    var laypage = layui.laypage
+                        , layer = layui.layer;
+                    //完整功能
+                    laypage.render({
+                        elem: 'pagelist'
+                        //设置总条数
+                        , count: rows
+                        , layout: ['count', 'prev', 'page', 'next', 'limit', 'refresh', 'skip']
+                        , jump: function (obj, first) {
+                            if (!first) {
+                                //调用我们自己分页的方法
+                                //obj.curr 当前页码
+                                //obj.limit 每页显示条数
+                                QueryAll(obj.curr, obj.limit);
+                            }
+                        }
+                    });
+
+                });
+            },
+            error: function (ex) {
+                alert(ex.responseText);
+            }
+        });
+
+    }
+</script>
